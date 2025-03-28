@@ -1,0 +1,89 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local TeleportGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local TextBox = Instance.new("TextBox")
+local TeleportButton = Instance.new("TextButton")
+local CloseButton = Instance.new("TextButton")
+
+TeleportGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+Frame.Size = UDim2.new(0, 220, 0, 160)
+Frame.Position = UDim2.new(0.5, -110, 0.5, -80)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 2
+Frame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+Frame.Parent = TeleportGui
+
+TextBox.Size = UDim2.new(0, 200, 0, 35)
+TextBox.Position = UDim2.new(0, 10, 0, 10)
+TextBox.PlaceholderText = "Oyuncu İsmi"
+TextBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.Parent = Frame
+
+TeleportButton.Size = UDim2.new(0, 200, 0, 35)
+TeleportButton.Position = UDim2.new(0, 10, 0, 50)
+TeleportButton.Text = "Işınla"
+TeleportButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportButton.Parent = Frame
+
+CloseButton.Size = UDim2.new(0, 200, 0, 35)
+CloseButton.Position = UDim2.new(0, 10, 0, 90)
+CloseButton.Text = "Kapat"
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Parent = Frame
+
+local dragging, dragInput, dragStart, startPos
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+TeleportButton.MouseButton1Click:Connect(function()
+    local targetName = TextBox.Text
+    local targetPlayer = Players:FindFirstChild(targetName)
+    if targetPlayer and targetPlayer.Character and LocalPlayer.Character then
+        local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local localRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if targetRoot and localRoot then
+            for i = 1, 10 do -- 5 kere ışınlama yap
+                task.wait(0.1) -- Her 1 saniyede bir
+                targetRoot.CFrame = localRoot.CFrame + Vector3.new(5, 0, 5) -- Yanına ışınlar
+                targetRoot.Anchored = true -- Oyuncunun geri sıçramasını önler
+                task.wait(0.5) -- Kısa bir bekleme süresi
+                targetRoot.Anchored = false -- Tekrar serbest bırakır
+            end
+        end
+    end
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    TeleportGui:Destroy()
+end)
